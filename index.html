@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simple Budget Tracker - Sederhana</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container" id="setup-section">
+    <h1>Tracking Pengeluaran</h1>
+    <p>Kelola uang dengan mudah</p>
+    <input type="number" id="budget-input" placeholder="Budget harian (Rp)" min="0" />
+    <button id="start-btn">Mulai Tracking 🚀</button>
+  </div>
+
+  <div class="container" id="tracker-section" style="display:none;">
+    <div class="status-emoji" id="status-emoji">✅</div>
+    <div class="remaining" id="remaining-budget">Rp 0</div>
+    <div class="sisa-label">Sisa Budget</div>
+    <div class="progress-bar">
+      <div class="progress-fill progress-green" id="progress-bar" style="width:0%;"></div>
+    </div>
+    <div class="progress-text" id="percent-used">Terpakai 0%</div>
+
+    <div>
+      <input type="text" id="expense-name" placeholder="Pengeluaran untuk apa?" />
+      <div class="quick-add-container">
+        <input type="number" id="expense-amount" placeholder="Jumlah" min="1" />
+        <button id="add-expense-btn">+</button>
+      </div>
+    </div>
+
+    <div class="expense-list" id="expense-list"></div>
+
+    <button class="reset-btn" id="reset-btn">Reset Budget</button>
+  </div>
+
+<script>
+  (function() {
+    const setupSection = document.getElementById('setup-section');
+    const trackerSection = document.getElementById('tracker-section');
+    const budgetInput = document.getElementById('budget-input');
+    const startBtn = document.getElementById('start-btn');
+    const statusEmoji = document.getElementById('status-emoji');
+    const remainingBudgetEl = document.getElementById('remaining-budget');
+    const progressBar = document.getElementById('progress-bar');
+    const percentUsed = document.getElementById('percent-used');
+    const expenseNameInput = document.getElementById('expense-name');
+    const expenseAmountInput = document.getElementById('expense-amount');
+    const addExpenseBtn = document.getElementById('add-expense-btn');
+    const expenseList = document.getElementById('expense-list');
+    const resetBtn = document.getElementById('reset-btn');
+
+    let budget = 0;
+    let expenses = [];
+
+    function updateUI() {
+      const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const remaining = budget - totalSpent;
+      const percent = budget > 0 ? Math.min((totalSpent / budget) * 100, 100) : 0;
+
+      remainingBudgetEl.textContent = `Rp ${remaining.toLocaleString('id-ID')}`;
+
+      if (percent >= 90) statusEmoji.textContent = '🚨';
+      else if (percent >= 70) statusEmoji.textContent = '⚠️';
+      else if (percent >= 50) statusEmoji.textContent = '👀';
+      else statusEmoji.textContent = '✅';
+
+      progressBar.classList.remove('progress-green', 'progress-yellow', 'progress-red');
+      if (percent >= 80) {
+        progressBar.classList.add('progress-red');
+      } else if (percent >= 60) {
+        progressBar.classList.add('progress-yellow');
+      } else {
+        progressBar.classList.add('progress-green');
+      }
+
+      progressBar.style.width = percent + '%';
+      percentUsed.textContent = `Terpakai ${Math.round(percent)}%`;
+
+      expenseList.innerHTML = '';
+      expenses.slice(-5).reverse().forEach(expense => {
+        const div = document.createElement('div');
+        div.className = 'expense-item';
+
+        const leftDiv = document.createElement('div');
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'expense-name';
+        nameDiv.textContent = expense.name;
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'expense-date';
+        dateDiv.textContent = expense.date;
+        leftDiv.appendChild(nameDiv);
+        leftDiv.appendChild(dateDiv);
+
+        const amountDiv = document.createElement('div');
+        amountDiv.className = 'expense-amount';
+        amountDiv.textContent = '-Rp ' + expense.amount.toLocaleString('id-ID');
+
+        div.appendChild(leftDiv);
+        div.appendChild(amountDiv);
+
+        expenseList.appendChild(div);
+      });
+    }
+
+    startBtn.addEventListener('click', () => {
+      const val = parseInt(budgetInput.value);
+      if (val > 0) {
+        budget = val;
+        expenses = [];
+        expenseNameInput.value = '';
+        expenseAmountInput.value = '';
+        setupSection.style.display = 'none';
+        trackerSection.style.display = 'block';
+        updateUI();
+      } else {
+        alert("Masukkan budget yang valid!");
+      }
+    });
+
+    addExpenseBtn.addEventListener('click', () => {
+      const name = expenseNameInput.value.trim();
+      const amount = parseInt(expenseAmountInput.value);
+      if (name && amount > 0) {
+        expenses.push({
+          id: Date.now(),
+          name,
+          amount,
+          date: new Date().toLocaleDateString('id-ID')
+        });
+        expenseNameInput.value = '';
+        expenseAmountInput.value = '';
+        updateUI();
+      } else {
+        alert('Masukkan nama pengeluaran dan jumlah yang valid.');
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      budget = 0;
+      expenses = [];
+      budgetInput.value = '';
+      expenseNameInput.value = '';
+      expenseAmountInput.value = '';
+      setupSection.style.display = 'block';
+      trackerSection.style.display = 'none';
+    });
+  })();
+</script>
+</body>
+</html>
